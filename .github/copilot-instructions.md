@@ -3,11 +3,11 @@
 ## Build, Test, and Lint
 
 ```bash
-make all          # full pipeline: clean → tidy → format → build → test
-make build        # go build ./...
-make test         # go test ./...
-make test-cached  # go test ./... -count=1  (bypass cache)
-make format       # gofmt -s -w -l .
+just              # full pipeline: clean → tidy → format → build → test
+just build        # go build ./...
+just test         # go test ./...
+just test-cached  # go test ./... -count=1  (bypass cache)
+just format       # gofmt -s -w -l .
 go mod tidy       # sync dependencies
 ```
 
