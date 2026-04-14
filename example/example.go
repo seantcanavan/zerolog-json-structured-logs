@@ -9,7 +9,7 @@ import (
 )
 
 func wrapDatabaseError() error {
-	expectedDBErr := sldb.LogNewDBErr(sldb.NewDBErr{
+	expectedDBErr := sldb.LogNewDBErr(sldb.NewDBErr{ // Call LogNewDBErr to log the DB error to the temp file
 		Constraint: "pk_users",
 		DBName:     "testdb",
 		InnerError: errors.New("sql: no rows in result set"),
@@ -20,18 +20,7 @@ func wrapDatabaseError() error {
 		Type:       sldb.ErrDBConnectionFailed,
 	})
 
-	apiErr := slapi.APIError{
-		CallerID:    "CallerID",
-		CallerType:  "CallerTYpe",
-		Method:      http.MethodGet,
-		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
-		OwnerID:     "OwnerID",
-		OwnerType:   "OwnerType",
-		Path:        "Path",
-		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
-		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
-		RequestID:   "RequestID",
-	}
+	apiErr := slapi.GenerateNonRandomAPIError()
 	apiErr.InnerError = fmt.Errorf("wrapping db error %w", expectedDBErr)
 	apiErr.StatusCode = sldb.ErrDBConnectionFailed.HTTPStatus()
 
@@ -57,18 +46,7 @@ func wrapLibraryError() error {
 		Message:    "sorry we need 48 lemons to make lemonade",
 	}
 
-	apiErr := slapi.APIError{
-		CallerID:    "CallerID",
-		CallerType:  "CallerTYpe",
-		Method:      http.MethodGet,
-		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
-		OwnerID:     "OwnerID",
-		OwnerType:   "OwnerType",
-		Path:        "Path",
-		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
-		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
-		RequestID:   "RequestID",
-	}
+	apiErr := slapi.GenerateNonRandomAPIError()
 	apiErr.InnerError = fmt.Errorf("wrapping db error %w", lse)
 	apiErr.StatusCode = http.StatusServiceUnavailable
 

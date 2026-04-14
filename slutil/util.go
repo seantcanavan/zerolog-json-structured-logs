@@ -14,6 +14,31 @@ func FromCtxSafe[T any](ctx context.Context, key interface{}) T {
 	return val
 }
 
+func UneraseMapStringArray(input map[string]any) map[string][]string {
+	res := make(map[string][]string)
+
+	for currentKey, currentVal := range input {
+		var strs []string
+		for _, currentAny := range currentVal.([]any) {
+			strs = append(strs, currentAny.(string))
+		}
+
+		res[currentKey] = strs
+	}
+
+	return res
+}
+
+func UneraseMapString(input map[string]any) map[string]string {
+	res := make(map[string]string)
+
+	for currentKey, currentVal := range input {
+		res[currentKey] = currentVal.(string)
+	}
+
+	return res
+}
+
 func PrettyInfoMsgF(calleePkg, calleeFn string, extra any) string {
 	return fmt.Sprintf("%s with result %+v", PrettyInfoMsg(calleePkg, calleeFn), extra)
 }

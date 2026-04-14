@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/seantcanavan/zerolog-json-structured-logs/slutil"
-	"github.com/seantcanavan/zerolog-json-structured-logs/slutil/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -22,8 +21,8 @@ func setupDBErrorFileLogger() {
 	// have to declare this here to prevent shadowing the outer dbLogFile with :=
 	var err error
 
-	if _, err = os.Stat(testutil.TempFileNameDBLogs); err == nil {
-		err = os.Remove(testutil.TempFileNameDBLogs)
+	if _, err = os.Stat(slutil.TempFileNameDBLogs); err == nil {
+		err = os.Remove(slutil.TempFileNameDBLogs)
 		if err != nil {
 			panic(fmt.Sprintf("Could not remove existing temp file: %s", err))
 		}
@@ -33,7 +32,7 @@ func setupDBErrorFileLogger() {
 		panic(fmt.Sprintf("Error checking for temp file existence: %s", err))
 	}
 
-	dbLogFile, err = os.CreateTemp("", testutil.TempFileNameDBLogs)
+	dbLogFile, err = os.CreateTemp("", slutil.TempFileNameDBLogs)
 	if err != nil {
 		panic(fmt.Sprintf("err is not nil: %s", err))
 	}
@@ -42,7 +41,7 @@ func setupDBErrorFileLogger() {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	// Configure zerolog to use a static now function for timestamp calculations so we can verify the timestamp later
-	zerolog.TimestampFunc = testutil.StaticNowFunc
+	zerolog.TimestampFunc = slutil.StaticNowFunc
 
 	// Configure zerolog to write to the temp file so we can easily capture the output
 	log.Logger = zerolog.New(dbLogFile).With().Timestamp().Logger()
@@ -159,7 +158,7 @@ func TestLogNewDBErr(t *testing.T) {
 
 			// check for the zerolog standard values - this is critical for testing formats and outputs for things like time and level
 			assert.Equal(t, zerolog.ErrorLevel.String(), zeroLogJSONItem.Level)
-			assert.Equal(t, testutil.StaticNowFunc(), zeroLogJSONItem.Time)
+			assert.Equal(t, slutil.StaticNowFunc(), zeroLogJSONItem.Time)
 		})
 
 		t.Run("verify that ErrorAsJSON is well formed", func(t *testing.T) {

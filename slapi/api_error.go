@@ -185,3 +185,38 @@ func FindAPIErrors(err error) []*APIError {
 	}
 	return errs
 }
+
+func GenerateRandomAPIError() APIError {
+	return APIError{
+		CallerID:    "caller-123",
+		CallerType:  "admin",
+		InnerError:  fmt.Errorf("wrapping error %w", errors.New("internal server error")),
+		Method:      http.MethodGet,
+		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
+		OwnerID:     "user-123",
+		OwnerType:   "user",
+		Path:        "/test/endpoint",
+		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
+		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
+		RequestID:   "req-123",
+	}
+}
+
+func GenerateNonRandomAPIError() APIError {
+	return APIError{
+		CallerID:    "CallerID",
+		CallerType:  "CallerTYpe",
+		ExecContext: slutil.GetExecContext(3),
+		InnerError:  errors.New("InnerError"),
+		Message:     "Message",
+		Method:      http.MethodGet,
+		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
+		OwnerID:     "OwnerID",
+		OwnerType:   "OwnerType",
+		Path:        "Path",
+		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
+		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
+		RequestID:   "RequestID",
+		StatusCode:  500,
+	}
+}
