@@ -7,6 +7,7 @@ import (
 	"github.com/seantcanavan/zerolog-json-structured-logs/sldb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
 	"testing"
 )
 
@@ -23,7 +24,18 @@ func TestWrapDatabaseError(t *testing.T) {
 		Type:       sldb.ErrDBConnectionFailed,
 	})
 
-	apiErr := slapi.GenerateNonRandomAPIError()
+	apiErr := slapi.APIError{
+		CallerID:    "CallerID",
+		CallerType:  "CallerTYpe",
+		Method:      http.MethodGet,
+		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
+		OwnerID:     "OwnerID",
+		OwnerType:   "OwnerType",
+		Path:        "Path",
+		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
+		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
+		RequestID:   "RequestID",
+	}
 	apiErr.InnerError = fmt.Errorf("wrapping db error %w", expectedDBError)
 	apiErr.StatusCode = sldb.ErrDBConnectionFailed.HTTPStatus()
 

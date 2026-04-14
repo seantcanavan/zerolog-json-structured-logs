@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/seantcanavan/zerolog-json-structured-logs/slutil"
+	"github.com/seantcanavan/zerolog-json-structured-logs/slutil/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -23,8 +24,8 @@ func setupAPIErrorFileLogger() {
 	// have to declare this here to prevent shadowing the outer apiLogFile with :=
 	var err error
 
-	if _, err = os.Stat(slutil.TempFileNameAPILogs); err == nil {
-		err = os.Remove(slutil.TempFileNameAPILogs)
+	if _, err = os.Stat(testutil.TempFileNameAPILogs); err == nil {
+		err = os.Remove(testutil.TempFileNameAPILogs)
 		if err != nil {
 			panic(fmt.Sprintf("Could not remove existing temp file: %s", err))
 		}
@@ -34,7 +35,7 @@ func setupAPIErrorFileLogger() {
 		panic(fmt.Sprintf("Error checking for temp file existence: %s", err))
 	}
 
-	apiLogFile, err = os.CreateTemp("", slutil.TempFileNameAPILogs)
+	apiLogFile, err = os.CreateTemp("", testutil.TempFileNameAPILogs)
 	if err != nil {
 		panic(fmt.Sprintf("err is not nil: %s", err))
 	}
@@ -43,7 +44,7 @@ func setupAPIErrorFileLogger() {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	// Configure zerolog to use a static now function for timestamp calculations so we can verify the timestamp later
-	zerolog.TimestampFunc = slutil.StaticNowFunc
+	zerolog.TimestampFunc = testutil.StaticNowFunc
 
 	// Configure zerolog to write to the temp file so we can easily capture the output
 	log.Logger = zerolog.New(apiLogFile).With().Timestamp().Logger()
@@ -92,7 +93,7 @@ func TestLogCtxMsg(t *testing.T) {
 
 	ctx := context.Background()
 
-	rawAPIError := GenerateRandomAPIError()
+	rawAPIError := generateRandomAPIError()
 
 	ctx = context.WithValue(ctx, CallerIDKey, rawAPIError.CallerID)
 	ctx = context.WithValue(ctx, CallerTypeKey, rawAPIError.CallerType)
@@ -118,7 +119,7 @@ func TestLogNew(t *testing.T) {
 	setupAPIErrorFileLogger()
 	defer tearDownAPIFileLogger()
 
-	rawAPIError := GenerateRandomAPIError()
+	rawAPIError := generateRandomAPIError()
 
 	loggedAPIError := LogNew(rawAPIError)
 
@@ -178,9 +179,9 @@ func verifyAPILogContents(t *testing.T, rawAPIError *APIError, loggedAPIError er
 			assert.Equal(t, float64(unwrappedAPIErr.Line), zeroLogJSONItem.ErrorAsJSON[LineKey]) // you get a float64 when unmarshalling a number into interface{} for safety
 			assert.Equal(t, float64(unwrappedAPIErr.StatusCode), zeroLogJSONItem.ErrorAsJSON[StatusCodeKey])
 
-			assert.Equal(t, unwrappedAPIErr.MultiParams, slutil.UneraseMapStringArray(zeroLogJSONItem.ErrorAsJSON[MultiParamsKey].(map[string]any)))
-			assert.Equal(t, unwrappedAPIErr.PathParams, slutil.UneraseMapString(zeroLogJSONItem.ErrorAsJSON[PathParamsKey].(map[string]any)))
-			assert.Equal(t, unwrappedAPIErr.QueryParams, slutil.UneraseMapString(zeroLogJSONItem.ErrorAsJSON[QueryParamsKey].(map[string]any)))
+			assert.Equal(t, unwrappedAPIErr.MultiParams, testutil.UneraseMapStringArray(zeroLogJSONItem.ErrorAsJSON[MultiParamsKey].(map[string]any)))
+			assert.Equal(t, unwrappedAPIErr.PathParams, testutil.UneraseMapString(zeroLogJSONItem.ErrorAsJSON[PathParamsKey].(map[string]any)))
+			assert.Equal(t, unwrappedAPIErr.QueryParams, testutil.UneraseMapString(zeroLogJSONItem.ErrorAsJSON[QueryParamsKey].(map[string]any)))
 
 			assert.Equal(t, unwrappedAPIErr.CallerID, zeroLogJSONItem.ErrorAsJSON[CallerIDKey])
 			assert.Equal(t, unwrappedAPIErr.CallerType, zeroLogJSONItem.ErrorAsJSON[CallerTypeKey])
@@ -201,7 +202,7 @@ func verifyAPILogContents(t *testing.T, rawAPIError *APIError, loggedAPIError er
 
 			// check for the zerolog standard values - this is critical for testing formats and outputs for things like time and level
 			assert.Equal(t, zerolog.ErrorLevel.String(), zeroLogJSONItem.Level)
-			assert.Equal(t, slutil.StaticNowFunc(), zeroLogJSONItem.Time)
+			assert.Equal(t, testutil.StaticNowFunc(), zeroLogJSONItem.Time)
 		})
 
 		t.Run("verify that ErrorAsJSON is well formed", func(t *testing.T) {
@@ -212,9 +213,9 @@ func verifyAPILogContents(t *testing.T, rawAPIError *APIError, loggedAPIError er
 				assert.Equal(t, float64(unwrappedAPIErr.Line), apiErrEntryLogValues[LineKey]) // you get a float64 when unmarshalling a number into interface{} for safety
 				assert.Equal(t, float64(unwrappedAPIErr.StatusCode), apiErrEntryLogValues[StatusCodeKey])
 
-				assert.Equal(t, unwrappedAPIErr.MultiParams, slutil.UneraseMapStringArray(apiErrEntryLogValues[MultiParamsKey].(map[string]any)))
-				assert.Equal(t, unwrappedAPIErr.PathParams, slutil.UneraseMapString(apiErrEntryLogValues[PathParamsKey].(map[string]any)))
-				assert.Equal(t, unwrappedAPIErr.QueryParams, slutil.UneraseMapString(apiErrEntryLogValues[QueryParamsKey].(map[string]any)))
+				assert.Equal(t, unwrappedAPIErr.MultiParams, testutil.UneraseMapStringArray(apiErrEntryLogValues[MultiParamsKey].(map[string]any)))
+				assert.Equal(t, unwrappedAPIErr.PathParams, testutil.UneraseMapString(apiErrEntryLogValues[PathParamsKey].(map[string]any)))
+				assert.Equal(t, unwrappedAPIErr.QueryParams, testutil.UneraseMapString(apiErrEntryLogValues[QueryParamsKey].(map[string]any)))
 
 				assert.Equal(t, unwrappedAPIErr.CallerID, apiErrEntryLogValues[CallerIDKey])
 				assert.Equal(t, unwrappedAPIErr.CallerType, apiErrEntryLogValues[CallerTypeKey])
@@ -238,4 +239,20 @@ func verifyAPILogContents(t *testing.T, rawAPIError *APIError, loggedAPIError er
 			})
 		})
 	})
+}
+
+func generateRandomAPIError() APIError {
+	return APIError{
+		CallerID:    "caller-123",
+		CallerType:  "admin",
+		InnerError:  fmt.Errorf("wrapping error %w", errors.New("internal server error")),
+		Method:      http.MethodGet,
+		MultiParams: map[string][]string{"multiKey": {"multiVal1", "multiVal2"}},
+		OwnerID:     "user-123",
+		OwnerType:   "user",
+		Path:        "/test/endpoint",
+		PathParams:  map[string]string{"pathKey1": "pathVal1", "pathKey2": "pathVal2"},
+		QueryParams: map[string]string{"queryKey1": "queryVal1", "queryKey2": "queryVal2"},
+		RequestID:   "req-123",
+	}
 }

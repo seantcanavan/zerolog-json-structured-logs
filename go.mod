@@ -1,6 +1,6 @@
 module github.com/seantcanavan/zerolog-json-structured-logs
 
-go 1.21
+go 1.26.2
 
 require (
 	github.com/rs/zerolog v1.31.0
