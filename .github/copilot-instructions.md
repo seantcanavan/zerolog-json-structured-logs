@@ -3,7 +3,7 @@
 ## Build, Test, and Lint
 
 ```bash
-just                  # clean + tidy + format + build + test (default recipe)
+make all              # clean + tidy + format + build + test
 go build ./...
 go test ./...
 go test ./... -count=1        # bypass test cache
